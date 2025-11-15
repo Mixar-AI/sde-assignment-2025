@@ -4,8 +4,23 @@ project(uvunwrap)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Eigen library (bundled in third_party/)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+# Find Eigen library
+# Try system installation first
+find_package(Eigen3 3.3 QUIET NO_MODULE)
+
+if(Eigen3_FOUND)
+    message(STATUS "Found system Eigen3: ${EIGEN3_INCLUDE_DIR}")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen")
+    message(STATUS "Using bundled Eigen from third_party/eigen")
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+else()
+    message(WARNING "Eigen3 not found. Please either:")
+    message(WARNING "  1. Install system Eigen: sudo apt-get install libeigen3-dev")
+    message(WARNING "  2. Download Eigen to third_party/eigen/")
+    message(WARNING "     wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz")
+    message(WARNING "     tar xzf eigen-3.4.0.tar.gz -C third_party/")
+    message(WARNING "     mv third_party/eigen-3.4.0 third_party/eigen")
+endif()
 
 # Include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

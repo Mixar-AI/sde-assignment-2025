@@ -8,6 +8,8 @@
 #ifndef MATH_UTILS_H
 #define MATH_UTILS_H
 
+#include "mesh.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,7 +50,7 @@ float max_float(float a, float b);
 /**
  * @brief Get vertex position as Vec3
  */
-Vec3 get_vertex_position(const struct Mesh* mesh, int vertex_idx);
+Vec3 get_vertex_position(const Mesh* mesh, int vertex_idx);
 
 /**
  * @brief Compute angle at vertex in triangle
@@ -57,7 +59,7 @@ Vec3 get_vertex_position(const struct Mesh* mesh, int vertex_idx);
  * @param vert_idx Vertex index
  * @return Angle in radians
  */
-float compute_vertex_angle_in_triangle(const struct Mesh* mesh,
+float compute_vertex_angle_in_triangle(const Mesh* mesh,
                                        int tri_idx,
                                        int vert_idx);
 
