@@ -11,7 +11,7 @@ GETTING STARTED
    cd mixar_assignment_package
 
 2. READ THE ASSIGNMENT
-   - Open ASSIGNMENT.pdf for complete requirements
+   - Open ASSIGNMENT.md for complete requirements
    - This README provides setup instructions only
 
 3. VERIFY TEST DATA
@@ -44,7 +44,7 @@ PACKAGE STRUCTURE
 
 mixar_assignment_package/
 ├── README.txt                     ← YOU ARE HERE
-├── ASSIGNMENT.pdf                 ← COMPLETE REQUIREMENTS
+├── ASSIGNMENT.md                  ← COMPLETE REQUIREMENTS
 │
 ├── test_data/                     ← TEST MESHES & VALIDATION
 │   ├── meshes/                    (7 test OBJ files)
@@ -78,7 +78,7 @@ Files provided (DO NOT MODIFY):
 
 Reference materials:
   📚  reference/algorithms.md              - Algorithm descriptions
-  📚  reference/lscm_math.pdf              - Mathematical background
+  📚  reference/lscm_math.md               - Mathematical background
   📚  reference/lscm_matrix_example.cpp    - LSCM example
   📚  reference/topology_example.cpp       - Topology example
 
@@ -227,7 +227,7 @@ RESOURCES
 
 ALGORITHMS:
 - starter_code/part1_cpp/reference/algorithms.md
-- starter_code/part1_cpp/reference/lscm_math.pdf
+- starter_code/part1_cpp/reference/lscm_math.md
 
 EXAMPLES:
 - All reference/ directories contain working examples
