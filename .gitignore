@@ -1,0 +1,44 @@
+# Build directories
+build/
+Build/
+*/build/
+*/Build/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled binaries
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.o
+*.a
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test outputs (generated during testing)
+starter_code/part1_cpp/build/

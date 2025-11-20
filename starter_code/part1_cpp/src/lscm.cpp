@@ -9,7 +9,7 @@
  *
  * IMPORTANT:
  * - See reference/lscm_matrix_example.cpp for matrix assembly example
- * - See reference/lscm_math.pdf for mathematical background
+ * - See reference/algorithms.md for mathematical background
  * - Use Eigen library for sparse linear algebra
  *
  * Algorithm:

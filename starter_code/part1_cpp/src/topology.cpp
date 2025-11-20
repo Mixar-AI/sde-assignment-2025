@@ -74,7 +74,12 @@ TopologyInfo* build_topology(const Mesh* mesh) {
 
     TopologyInfo* topo = (TopologyInfo*)malloc(sizeof(TopologyInfo));
 
-    // YOUR CODE HERE
+    // Initialize to safe defaults (prevents crashes before implementation)
+    topo->edges = NULL;
+    topo->num_edges = 0;
+    topo->edge_faces = NULL;
+
+    // TODO: Your implementation here
 
     return topo;
 }
