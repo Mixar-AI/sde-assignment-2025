@@ -54,7 +54,7 @@ Build a production-ready automatic UV unwrapping system that segments 3D meshes 
 - Complete API specifications in header files
 - Reference implementation of LSCM matrix assembly
 - Detailed algorithm descriptions in `reference/algorithms.md`
-- Mathematical background in `reference/lscm_math.pdf`
+- Mathematical background in `reference/lscm_math.md`
 - Complete test suite
 - Validation tools
 
@@ -260,7 +260,7 @@ part3_blender/
 
 ### Documentation
 - `starter_code/part1_cpp/reference/algorithms.md` - Algorithm descriptions
-- `starter_code/part1_cpp/reference/lscm_math.pdf` - Mathematical derivations
+- `starter_code/part1_cpp/reference/lscm_math.md` - Mathematical derivations
 - `starter_code/part2_python/reference/metrics_spec.md` - Exact metric formulas
 
 ### Reference Code

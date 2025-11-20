@@ -1,0 +1,371 @@
+================================================================================
+UV UNWRAPPING CLI - EXPECTED BEHAVIOR EXAMPLES
+================================================================================
+
+This file shows the expected command-line interface behavior for your Python
+UV unwrapping tool. Use this as a reference when implementing cli.py.
+
+================================================================================
+COMMAND 1: unwrap - Single mesh UV unwrapping
+================================================================================
+
+$ python cli.py unwrap cube.obj cube_unwrapped.obj
+
+Output:
+--------
+Loading mesh from cube.obj...
+  8 vertices, 12 triangles loaded
+
+Unwrapping mesh...
+  Parameters:
+    Angle threshold: 30.0°
+    Min island faces: 5
+    Pack islands: yes
+    Island margin: 0.02
+
+  Building topology...
+  Detecting seams... found 7 seams
+  Extracting UV islands... found 1 island
+  Unwrapping with LSCM...
+  Packing islands...
+
+  Quality metrics:
+    Average stretch: 1.23
+    Maximum stretch: 1.87
+    Angle distortion: 5.2°
+    Coverage: 68%
+
+Saving to cube_unwrapped.obj...
+Done! (0.15s)
+
+
+================================================================================
+COMMAND 1b: unwrap with custom parameters
+================================================================================
+
+$ python cli.py unwrap sphere.obj sphere_unwrapped.obj \
+    --angle-threshold 45 \
+    --min-island-faces 10 \
+    --no-pack \
+    --margin 0.05
+
+Output:
+--------
+Loading mesh from sphere.obj...
+  42 vertices, 80 triangles loaded
+
+Unwrapping mesh...
+  Parameters:
+    Angle threshold: 45.0°
+    Min island faces: 10
+    Pack islands: no
+    Island margin: 0.05
+
+  Building topology...
+  Detecting seams... found 2 seams
+  Extracting UV islands... found 1 island
+  Unwrapping with LSCM...
+  Skipping packing (--no-pack)
+
+  Quality metrics:
+    Average stretch: 1.05
+    Maximum stretch: 1.34
+    Angle distortion: 3.1°
+    Coverage: 45%
+
+Saving to sphere_unwrapped.obj...
+Done! (0.08s)
+
+
+================================================================================
+COMMAND 2: batch - Batch processing multiple meshes
+================================================================================
+
+$ python cli.py batch input_meshes/ output_meshes/
+
+Output:
+--------
+Scanning input_meshes/ for .obj files...
+Found 4 meshes to process:
+  - cube.obj
+  - sphere.obj
+  - cylinder.obj
+  - torus.obj
+
+Processing with 4 threads...
+
+[1/4] cube.obj... ✓ (0.12s) - 1 island, stretch: 1.23
+[2/4] sphere.obj... ✓ (0.09s) - 1 island, stretch: 1.15
+[3/4] cylinder.obj... ✓ (0.11s) - 1 island, stretch: 1.08
+[4/4] torus.obj... ✓ (0.15s) - 2 islands, stretch: 1.34
+
+Batch complete!
+  Total time: 0.47s
+  Average time per mesh: 0.12s
+  Success: 4/4 (100%)
+
+
+================================================================================
+COMMAND 2b: batch with custom threads
+================================================================================
+
+$ python cli.py batch meshes/ output/ --threads 8
+
+Output:
+--------
+Scanning meshes/ for .obj files...
+Found 12 meshes to process
+
+Processing with 8 threads...
+
+[1/12] mesh001.obj... ✓ (0.08s)
+[2/12] mesh002.obj... ✓ (0.09s)
+[3/12] mesh003.obj... ✓ (0.07s)
+[4/12] mesh004.obj... ✓ (0.11s)
+[5/12] mesh005.obj... ✓ (0.10s)
+[6/12] mesh006.obj... ✓ (0.08s)
+[7/12] mesh007.obj... ✓ (0.09s)
+[8/12] mesh008.obj... ✓ (0.12s)
+[9/12] mesh009.obj... ✓ (0.08s)
+[10/12] mesh010.obj... ✓ (0.07s)
+[11/12] mesh011.obj... ✓ (0.10s)
+[12/12] mesh012.obj... ✓ (0.09s)
+
+Batch complete!
+  Total time: 0.31s  (speedup: 3.1x)
+  Average time per mesh: 0.09s
+  Success: 12/12 (100%)
+
+
+================================================================================
+COMMAND 3: optimize - Parameter optimization
+================================================================================
+
+$ python cli.py optimize sphere.obj --metric stretch
+
+Output:
+--------
+Loading mesh from sphere.obj...
+  42 vertices, 80 triangles loaded
+
+Optimizing for: stretch
+Testing parameter combinations...
+
+[1/20] angle=20°, min_faces=3... stretch=1.45
+[2/20] angle=20°, min_faces=5... stretch=1.38
+[3/20] angle=20°, min_faces=10... stretch=1.52
+[4/20] angle=30°, min_faces=3... stretch=1.22
+[5/20] angle=30°, min_faces=5... stretch=1.15  ← best so far
+[6/20] angle=30°, min_faces=10... stretch=1.28
+[7/20] angle=40°, min_faces=3... stretch=1.31
+[8/20] angle=40°, min_faces=5... stretch=1.18
+[9/20] angle=40°, min_faces=10... stretch=1.35
+...
+[20/20] angle=60°, min_faces=10... stretch=1.67
+
+Best parameters found:
+  Angle threshold: 30°
+  Min island faces: 5
+  Metric value: 1.15
+
+Unwrapping with optimal parameters...
+Saving to sphere_optimized.obj...
+Done! (2.3s)
+
+
+================================================================================
+COMMAND 3b: optimize for different metric
+================================================================================
+
+$ python cli.py optimize torus.obj --metric coverage --output torus_opt.obj
+
+Output:
+--------
+Loading mesh from torus.obj...
+  144 vertices, 288 triangles loaded
+
+Optimizing for: coverage
+Testing parameter combinations...
+
+[1/20] angle=20°, min_faces=3... coverage=52%
+[2/20] angle=20°, min_faces=5... coverage=61%
+...
+[15/20] angle=45°, min_faces=7... coverage=78%  ← best so far
+...
+[20/20] angle=60°, min_faces=10... coverage=71%
+
+Best parameters found:
+  Angle threshold: 45°
+  Min island faces: 7
+  Metric value: 78%
+
+Unwrapping with optimal parameters...
+Saving to torus_opt.obj...
+Done! (3.1s)
+
+
+================================================================================
+COMMAND 4: analyze - Analyze existing UVs
+================================================================================
+
+$ python cli.py analyze cube_unwrapped.obj
+
+Output:
+--------
+Loading mesh from cube_unwrapped.obj...
+  8 vertices, 12 triangles, 8 UV coordinates loaded
+
+Analyzing UV quality...
+
+=== UV Quality Report ===
+
+Stretch:
+  Average: 1.23
+  Maximum: 1.87
+  Min: 0.94
+
+Area Distortion:
+  Average: 1.15
+  Maximum: 1.54
+  Min: 0.88
+
+Angle Distortion:
+  Average: 5.2°
+  Maximum: 12.8°
+
+Coverage: 68%
+
+UV Bounds:
+  U: [0.02, 0.98]
+  V: [0.03, 0.97]
+
+Islands: 1
+  Island 1: 12 faces, stretch=1.23
+
+Overall Quality: Good
+  ✓ Low stretch (< 2.0)
+  ✓ Low angle distortion (< 10°)
+  ⚠ Coverage could be improved (< 70%)
+
+
+================================================================================
+ERROR HANDLING EXAMPLES
+================================================================================
+
+1. Missing input file:
+--------
+$ python cli.py unwrap nonexistent.obj output.obj
+
+Error: Cannot load mesh from nonexistent.obj
+  File not found: nonexistent.obj
+
+
+2. Invalid OBJ file:
+--------
+$ python cli.py unwrap corrupted.obj output.obj
+
+Error: Failed to parse corrupted.obj
+  Line 42: Invalid vertex format
+
+
+3. Empty directory for batch:
+--------
+$ python cli.py batch empty_dir/ output/
+
+Warning: No .obj files found in empty_dir/
+Nothing to process.
+
+
+4. Invalid parameter value:
+--------
+$ python cli.py unwrap cube.obj out.obj --angle-threshold 200
+
+Error: Invalid angle threshold: 200
+  Must be between 0 and 180 degrees
+
+
+5. Thread count too high:
+--------
+$ python cli.py batch meshes/ output/ --threads 1000
+
+Warning: Requested 1000 threads, using 16 (system CPU count)
+
+
+================================================================================
+HELP OUTPUT
+================================================================================
+
+$ python cli.py --help
+
+Usage: cli.py <command> [options]
+
+Commands:
+  unwrap    Unwrap a single mesh
+  batch     Process multiple meshes in parallel
+  optimize  Find optimal parameters for a mesh
+  analyze   Analyze UV quality of existing unwrapped mesh
+
+Run 'cli.py <command> --help' for command-specific options.
+
+
+$ python cli.py unwrap --help
+
+Usage: cli.py unwrap INPUT OUTPUT [options]
+
+Unwrap a single 3D mesh to generate UV coordinates.
+
+Arguments:
+  INPUT              Input .obj file path
+  OUTPUT             Output .obj file path (with UVs)
+
+Options:
+  --angle-threshold FLOAT    Seam detection angle threshold (default: 30)
+  --min-island-faces INT     Minimum faces per island (default: 5)
+  --no-pack                  Skip island packing
+  --margin FLOAT             Island margin for packing (default: 0.02)
+
+Examples:
+  python cli.py unwrap input.obj output.obj
+  python cli.py unwrap mesh.obj unwrapped.obj --angle-threshold 45
+
+
+================================================================================
+PROGRESS INDICATORS
+================================================================================
+
+For long-running operations, show progress:
+
+$ python cli.py unwrap large_mesh.obj output.obj
+
+Loading mesh from large_mesh.obj...
+  125,436 vertices, 250,872 triangles loaded
+
+Unwrapping mesh...
+  Building topology... [====================] 100%
+  Detecting seams... [====================] 100%
+  Extracting islands... [====================] 100%
+  Unwrapping 15 islands:
+    Island 1/15 (42,150 faces)... [====================] 100%
+    Island 2/15 (38,923 faces)... [====================] 100%
+    ...
+  Packing islands... [====================] 100%
+
+Done! (15.7s)
+
+
+================================================================================
+NOTES FOR IMPLEMENTERS
+================================================================================
+
+1. Use argparse for command-line argument parsing
+2. Implement ThreadPoolExecutor for batch processing
+3. Show progress bars for operations > 1 second (use tqdm library)
+4. Validate all inputs before processing
+5. Provide informative error messages
+6. Support both absolute and relative paths
+7. Create output directories if they don't exist
+8. Handle Ctrl+C gracefully (cleanup partial outputs)
+9. Log errors to stderr, normal output to stdout
+10. Exit with code 0 on success, non-zero on errors
+
+================================================================================
