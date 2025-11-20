@@ -74,58 +74,12 @@ TopologyInfo* build_topology(const Mesh* mesh) {
 
     TopologyInfo* topo = (TopologyInfo*)malloc(sizeof(TopologyInfo));
 
-    // STEP 1: Create map to collect edges
-    std::map<Edge, EdgeInfo> edge_map;
+    // Initialize to safe defaults (prevents crashes before implementation)
+    topo->edges = NULL;
+    topo->num_edges = 0;
+    topo->edge_faces = NULL;
 
-    // STEP 2: Iterate through all triangles and extract edges
-    for (int f = 0; f < mesh->num_triangles; f++) {
-        int v0 = mesh->triangles[f * 3];
-        int v1 = mesh->triangles[f * 3 + 1];
-        int v2 = mesh->triangles[f * 3 + 2];
-
-        // Add three edges of this triangle
-        Edge e01(v0, v1);
-        Edge e12(v1, v2);
-        Edge e20(v2, v0);
-
-        // Track which faces use each edge
-        if (edge_map[e01].face0 == -1) {
-            edge_map[e01].face0 = f;
-        } else {
-            edge_map[e01].face1 = f;
-        }
-
-        if (edge_map[e12].face0 == -1) {
-            edge_map[e12].face0 = f;
-        } else {
-            edge_map[e12].face1 = f;
-        }
-
-        if (edge_map[e20].face0 == -1) {
-            edge_map[e20].face0 = f;
-        } else {
-            edge_map[e20].face1 = f;
-        }
-    }
-
-    // STEP 3: Convert map to arrays
-    topo->num_edges = edge_map.size();
-    topo->edges = (int*)malloc(topo->num_edges * 2 * sizeof(int));
-    topo->edge_faces = (int*)malloc(topo->num_edges * 2 * sizeof(int));
-
-    int idx = 0;
-    for (auto& pair : edge_map) {
-        const Edge& edge = pair.first;
-        const EdgeInfo& info = pair.second;
-
-        topo->edges[idx * 2] = edge.v0;
-        topo->edges[idx * 2 + 1] = edge.v1;
-
-        topo->edge_faces[idx * 2] = info.face0;
-        topo->edge_faces[idx * 2 + 1] = info.face1;
-
-        idx++;
-    }
+    // TODO: Your implementation here
 
     return topo;
 }
