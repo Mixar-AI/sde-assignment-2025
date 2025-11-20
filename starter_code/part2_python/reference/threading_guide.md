@@ -133,7 +133,10 @@ import threading
 
 **Use ThreadPoolExecutor** because:
 1. Our heavy computation is in C library (via ctypes)
-2. C code releases GIL during processing
+2. ctypes automatically releases GIL when calling C functions (using CDLL)
+   - This happens transparently - no special code needed
+   - Exception: PyDLL does NOT release GIL (only used for calling Python C API)
+   - This allows true parallel execution of C code in multiple threads
 3. We do I/O (reading/writing OBJ files)
 4. ThreadPoolExecutor has simpler API
 5. Lower overhead than ProcessPoolExecutor
@@ -158,9 +161,15 @@ num_threads = get_optimal_thread_count()
 ```
 
 **Guidelines:**
-- Default: `os.cpu_count()`
-- Maximum: `min(num_files, 2 * cpu_count)`
-- Minimum: 1 (for small batches)
+- Default: `os.cpu_count()` for compute-bound work (our case)
+- For pure I/O-heavy workloads: up to `2 * cpu_count`
+- Maximum: `min(num_files, cpu_count * 2)`
+- Minimum: 1 (for small batches or debugging)
+
+**For UV unwrapping (compute + I/O mixed):**
+- Start with `os.cpu_count()` as the baseline
+- Can increase slightly (e.g., 1.5x) if profiling shows I/O bottlenecks
+- Never exceed `2 * cpu_count` even for I/O operations
 
 ### Progress Tracking
 
