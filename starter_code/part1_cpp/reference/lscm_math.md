@@ -19,14 +19,15 @@ A mapping `φ: S → R²` from a surface S to the plane is **conformal** if it p
 For a triangle mesh, LSCM minimizes the conformal energy:
 
 ```
-E(u,v) = ∑ₜ Area(t) · ||(∇u)ᵀ - (∇v)ᴶ||²
+E(u,v) = ∑ₜ Area(t) · ||∇u - R₉₀°(∇v)||²
 ```
 
 Where:
 - `t` ranges over all triangles
 - `u, v` are the UV coordinates for each vertex
 - `∇u, ∇v` are gradients of u and v over triangle t
-- `J` is the 90° rotation matrix: `[[0, -1], [1, 0]]`
+- `R₉₀°` is the 90° counterclockwise rotation operator
+- For a vector `∇v = [vₓ, vᵧ]`, the rotation is `R₉₀°(∇v) = [-vᵧ, vₓ]`
 
 ### Physical Interpretation
 
@@ -75,7 +76,11 @@ Where `A` is the triangle area: `A = 0.5 * |x'₁ * y'₂ - x'₂ * y'₁|`
 Eₜ = A · [((∇u)ₓ - (∇v)ᵧ)² + ((∇u)ᵧ + (∇v)ₓ)²]
 ```
 
-This simplifies to a quadratic form in the UV coordinates.
+This directly relates to the Cauchy-Riemann equations. For a conformal map:
+- `∂u/∂x = ∂v/∂y` (satisfied when `(∇u)ₓ - (∇v)ᵧ = 0`)
+- `∂u/∂y = -∂v/∂x` (satisfied when `(∇u)ᵧ + (∇v)ₓ = 0`)
+
+The energy is zero when both conditions are met. This simplifies to a quadratic form in the UV coordinates.
 
 ## 4. Matrix Assembly
 
