@@ -43,19 +43,63 @@ Mesh* load_obj(const char* filename) {
                 has_uvs = true;
             }
         } else if (line[0] == 'f' && line[1] == ' ') {
-            // Face
-            int v0, v1, v2;
-            int vt0, vt1, vt2;
+            // Face - supports multiple formats:
+            // - Triangles: f v1 v2 v3
+            // - Triangles with UVs: f v1/vt1 v2/vt2 v3/vt3
+            // - Triangles with UVs and normals: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
+            // - Quads: f v1 v2 v3 v4 (converted to two triangles)
+            // - Quads with UVs/normals: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 v4/vt4/vn4
 
-            if (has_uvs && sscanf(line, "f %d/%d %d/%d %d/%d",
-                                 &v0, &vt0, &v1, &vt1, &v2, &vt2) == 6) {
-                triangles.push_back(v0 - 1);
-                triangles.push_back(v1 - 1);
-                triangles.push_back(v2 - 1);
-            } else if (sscanf(line, "f %d %d %d", &v0, &v1, &v2) == 3) {
-                triangles.push_back(v0 - 1);
-                triangles.push_back(v1 - 1);
-                triangles.push_back(v2 - 1);
+            int v[4], vt[4], vn[4];
+            int num_vertices = vertices.size() / 3;
+            int num_parsed = 0;
+
+            // Try v/vt/vn format (most common in Blender)
+            if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
+                      &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1],
+                      &v[2], &vt[2], &vn[2], &v[3], &vt[3], &vn[3]) == 12) {
+                num_parsed = 4;  // Quad with UVs and normals
+            } else if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d",
+                             &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1],
+                             &v[2], &vt[2], &vn[2]) == 9) {
+                num_parsed = 3;  // Triangle with UVs and normals
+            } else if (sscanf(line, "f %d/%d %d/%d %d/%d %d/%d",
+                             &v[0], &vt[0], &v[1], &vt[1], &v[2], &vt[2], &v[3], &vt[3]) == 8) {
+                num_parsed = 4;  // Quad with UVs
+            } else if (sscanf(line, "f %d/%d %d/%d %d/%d",
+                             &v[0], &vt[0], &v[1], &vt[1], &v[2], &vt[2]) == 6) {
+                num_parsed = 3;  // Triangle with UVs
+            } else if (sscanf(line, "f %d %d %d %d", &v[0], &v[1], &v[2], &v[3]) == 4) {
+                num_parsed = 4;  // Quad without UVs
+            } else if (sscanf(line, "f %d %d %d", &v[0], &v[1], &v[2]) == 3) {
+                num_parsed = 3;  // Triangle without UVs
+            }
+
+            if (num_parsed >= 3) {
+                // Validate vertex indices (OBJ is 1-indexed)
+                bool valid = true;
+                for (int i = 0; i < num_parsed; i++) {
+                    if (v[i] < 1 || v[i] > num_vertices) {
+                        fprintf(stderr, "Error: Invalid vertex index %d in face (valid range: 1-%d)\n",
+                               v[i], num_vertices);
+                        valid = false;
+                        break;
+                    }
+                }
+
+                if (valid) {
+                    // Add first triangle (v0, v1, v2)
+                    triangles.push_back(v[0] - 1);
+                    triangles.push_back(v[1] - 1);
+                    triangles.push_back(v[2] - 1);
+
+                    // If quad, add second triangle (v0, v2, v3)
+                    if (num_parsed == 4) {
+                        triangles.push_back(v[0] - 1);
+                        triangles.push_back(v[2] - 1);
+                        triangles.push_back(v[3] - 1);
+                    }
+                }
             }
         }
     }
@@ -77,9 +121,21 @@ Mesh* load_obj(const char* filename) {
     mesh->triangles = (int*)malloc(triangles.size() * sizeof(int));
     memcpy(mesh->triangles, triangles.data(), triangles.size() * sizeof(int));
 
-    if (has_uvs && uvs_temp.size() == vertices.size() / 3 * 2) {
-        mesh->uvs = (float*)malloc(uvs_temp.size() * sizeof(float));
-        memcpy(mesh->uvs, uvs_temp.data(), uvs_temp.size() * sizeof(float));
+    if (has_uvs) {
+        size_t expected_uv_count = (vertices.size() / 3) * 2;
+        if (uvs_temp.size() == expected_uv_count) {
+            mesh->uvs = (float*)malloc(uvs_temp.size() * sizeof(float));
+            memcpy(mesh->uvs, uvs_temp.data(), uvs_temp.size() * sizeof(float));
+        } else {
+            fprintf(stderr,
+                    "Warning: UV count mismatch in %s\n"
+                    "  Expected: %zu UVs (%zu vertices)\n"
+                    "  Found:    %zu UVs\n"
+                    "  UVs will be ignored.\n",
+                    filename, expected_uv_count / 2, vertices.size() / 3,
+                    uvs_temp.size() / 2);
+            mesh->uvs = NULL;
+        }
     } else {
         mesh->uvs = NULL;
     }

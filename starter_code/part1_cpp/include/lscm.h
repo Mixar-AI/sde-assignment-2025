@@ -37,8 +37,8 @@ extern "C" {
  * IMPORTANT: See reference/lscm_matrix_example.cpp for matrix assembly example
  *
  * Dependencies:
- * - Eigen library for sparse matrices (included in third_party/)
- * - Use Eigen::SparseLU or Eigen::ConjugateGradient
+ * - Eigen library for sparse matrices (include in third_party/ or update CMakeLists.txt if needed)
+ * - Use Eigen::SparseLU or Eigen::ConjugateGradient for solving the linear system
  */
 float* lscm_parameterize(const Mesh* mesh,
                          const int* face_indices,

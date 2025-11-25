@@ -11,12 +11,11 @@ GETTING STARTED
    cd mixar_assignment_package
 
 2. READ THE ASSIGNMENT
-   - Open ASSIGNMENT.pdf for complete requirements
+   - Open ASSIGNMENT.md for complete requirements
    - This README provides setup instructions only
 
 3. VERIFY TEST DATA
-   - Check test_data/meshes/ contains 7 OBJ files
-   - Check test_data/reference_outputs/ for ground truth
+   - Check test_data/meshes/ contains 4 OBJ files (cube, cylinder, sphere, torus)
 
 4. BUILD PART 1 (C++)
    cd starter_code/part1_cpp
@@ -30,13 +29,11 @@ GETTING STARTED
 5. SETUP PART 2 (Python)
    cd starter_code/part2_python
    pip install -r requirements.txt
-   python -m pytest tests/
 
-6. TEST PART 3 (Blender)
-   - Open Blender (4.2+)
-   - Edit > Preferences > Add-ons > Install
-   - Select starter_code/part3_blender/
-   - Enable "UV: Smart UV Unwrapping"
+6. PART 3 (Blender)
+   - No starter code provided
+   - Create your add-on from scratch
+   - See ASSIGNMENT.md for requirements
 
 ================================================================================
 PACKAGE STRUCTURE
@@ -44,17 +41,16 @@ PACKAGE STRUCTURE
 
 mixar_assignment_package/
 ├── README.txt                     ← YOU ARE HERE
-├── ASSIGNMENT.pdf                 ← COMPLETE REQUIREMENTS
+├── ASSIGNMENT.md                  ← COMPLETE REQUIREMENTS
 │
-├── test_data/                     ← TEST MESHES & VALIDATION
-│   ├── meshes/                    (7 test OBJ files)
-│   ├── reference_outputs/         (Expected results)
-│   └── validation/                (Comparison tools)
+├── test_data/                     ← TEST MESHES
+│   └── meshes/                    (4 test OBJ files)
 │
 └── starter_code/                  ← YOUR IMPLEMENTATION GOES HERE
     ├── part1_cpp/                 (C++ unwrapping engine)
-    ├── part2_python/              (Python batch processor)
-    └── part3_blender/             (Blender add-on)
+    └── part2_python/              (Python batch processor)
+
+NOTE: Part 3 (Blender add-on) has no starter code - you create from scratch
 
 ================================================================================
 WHAT TO IMPLEMENT
@@ -78,9 +74,8 @@ Files provided (DO NOT MODIFY):
 
 Reference materials:
   📚  reference/algorithms.md              - Algorithm descriptions
-  📚  reference/lscm_math.pdf              - Mathematical background
+  📚  reference/lscm_math.md               - Mathematical background
   📚  reference/lscm_matrix_example.cpp    - LSCM example
-  📚  reference/topology_example.cpp       - Topology example
 
 PART 2 - PYTHON PROCESSOR (35 points, 4-5 hours)
 -------------------------------------------------
@@ -92,24 +87,30 @@ Files you'll implement:
   ✏️  cli.py                    - Command-line interface
 
 Reference materials:
-  📚  reference/metrics_spec.md        - Exact metric formulas
-  📚  reference/metrics_example.py     - Metric implementation example
-  📚  reference/cli_examples.txt       - Expected CLI behavior
-  📚  reference/threading_guide.md     - Threading best practices
+  📚  reference/metrics_spec.md        - Exact metric formulas with Python examples
 
 PART 3 - BLENDER ADD-ON (35 points, 6-8 hours)
 -----------------------------------------------
-Files you'll implement:
-  ✏️  __init__.py               - Add-on registration
-  ✏️  operators.py              - Unwrap, batch, seam operators
-  ✏️  panels.py                 - UI panel
-  ✏️  core/cache.py             - Caching system
+⚠️  NO STARTER CODE PROVIDED - Build from scratch
 
-Reference materials:
-  📚  reference/implementation_guide.md      - Complete guide
-  📚  reference/ui_mockup.png                - UI design
-  📚  reference/cache_example.py             - Caching example
-  📚  reference/direct_mesh_extraction.py    - Mesh data extraction
+Part 3 tests your ability to create production tools independently.
+You will create a complete Blender add-on that:
+  ✏️  Integrates with Blender 4.2+
+  ✏️  Calls your C++ unwrapping engine via Python bindings
+  ✏️  Provides UI for parameter control
+  ✏️  Implements caching system
+  ✏️  Supports batch processing
+  ✏️  Includes seam editing tools
+
+See ASSIGNMENT.md lines 142-193 for complete requirements.
+This differentiates senior engineers who can architect solutions independently.
+
+You will create files like:
+  - __init__.py (add-on registration with bl_info)
+  - operators.py (unwrap, batch, seam operators)
+  - panels.py (UI panel in 3D viewport)
+  - core/cache.py (caching system)
+  - Any other files you need for your architecture
 
 ================================================================================
 DEPENDENCIES
@@ -118,7 +119,13 @@ DEPENDENCIES
 PART 1 - C++:
   - CMake 3.15+
   - C++14 compiler (GCC 7+, Clang 6+, MSVC 2017+)
-  - Eigen 3.3+ (included in third_party/)
+  - Eigen 3.3+ linear algebra library
+
+EIGEN INSTALLATION:
+  Ubuntu/Debian:  sudo apt-get install libeigen3-dev
+  macOS:          brew install eigen
+  Windows:        vcpkg install eigen3
+  From source:    Download from eigen.tuxfamily.org
 
 PART 2 - Python:
   - Python 3.8+
@@ -161,10 +168,36 @@ TESTING:
 - Part 3: Test in Blender after each feature
 
 VALIDATION:
-cd test_data/validation
-python compare_uvs.py \
-    ../../starter_code/part1_cpp/build/output/cube.obj \
-    ../reference_outputs/cube_lscm.obj
+Run the test suite to verify your implementation:
+cd starter_code/part1_cpp/build
+./test_unwrap
+
+MEMORY LEAK CHECKING:
+Check your implementation for memory leaks using valgrind:
+
+# Install valgrind (if not already installed)
+# Ubuntu/Debian:
+sudo apt-get install valgrind
+
+# macOS (Homebrew):
+brew install valgrind
+
+# Run tests with valgrind
+cd starter_code/part1_cpp/build
+valgrind --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         ./test_unwrap
+
+Expected output for correct implementation:
+  LEAK SUMMARY:
+    definitely lost: 0 bytes in 0 blocks
+    indirectly lost: 0 bytes in 0 blocks
+
+Common issues:
+  "still reachable: XXX bytes" - Usually OK (global allocations)
+  "definitely lost: XXX bytes" - Memory leak! Fix required.
+  "invalid read/write" - Buffer overflow! Check array bounds.
 
 ================================================================================
 SUBMISSION CHECKLIST
@@ -211,13 +244,13 @@ QUESTIONS:
 
 DEBUGGING:
 1. Check reference/ directories for examples
-2. Compare your output against reference_outputs/
-3. Use validation tools in test_data/validation/
-4. Check test output for specific failure messages
+2. Run test suite to see specific failure messages
+3. Check test output for detailed error information
+4. Use printf debugging in skeleton code
 
 COMMON ISSUES:
-- "CMake can't find Eigen" → Use bundled version in third_party/
-- "Tests segfault" → Check memory management, use valgrind
+- "CMake can't find Eigen" → Install system package (see EIGEN INSTALLATION above)
+- "Tests segfault" → Check memory management, see MEMORY LEAK CHECKING section
 - "LSCM doesn't converge" → Check boundary conditions, matrix assembly
 - "Blender can't import addon" → Check __init__.py has bl_info
 
@@ -227,15 +260,14 @@ RESOURCES
 
 ALGORITHMS:
 - starter_code/part1_cpp/reference/algorithms.md
-- starter_code/part1_cpp/reference/lscm_math.pdf
+- starter_code/part1_cpp/reference/lscm_math.md
 
 EXAMPLES:
 - All reference/ directories contain working examples
 - Study these before implementing
 
-VALIDATION:
-- test_data/reference_outputs/ - Expected results
-- test_data/validation/ - Comparison tools
+TEST DATA:
+- test_data/meshes/ - 4 test meshes for validation
 
 ================================================================================
 GOOD LUCK!

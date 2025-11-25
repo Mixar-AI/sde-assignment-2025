@@ -54,7 +54,7 @@ Build a production-ready automatic UV unwrapping system that segments 3D meshes 
 - Complete API specifications in header files
 - Reference implementation of LSCM matrix assembly
 - Detailed algorithm descriptions in `reference/algorithms.md`
-- Mathematical background in `reference/lscm_math.pdf`
+- Mathematical background in `reference/lscm_math.md`
 - Complete test suite
 - Validation tools
 
@@ -260,18 +260,14 @@ part3_blender/
 
 ### Documentation
 - `starter_code/part1_cpp/reference/algorithms.md` - Algorithm descriptions
-- `starter_code/part1_cpp/reference/lscm_math.pdf` - Mathematical derivations
+- `starter_code/part1_cpp/reference/lscm_math.md` - Mathematical derivations
 - `starter_code/part2_python/reference/metrics_spec.md` - Exact metric formulas
 
 ### Reference Code
 - `starter_code/part1_cpp/reference/lscm_matrix_example.cpp` - LSCM matrix assembly
-- `starter_code/part2_python/reference/metrics_example.py` - Metric computation
-- `starter_code/part3_blender/reference/cache_example.py` - Caching implementation
 
 ### Test Data
-- `test_data/meshes/` - 7 test meshes (cube to 10k vertices)
-- `test_data/reference_outputs/` - Expected results
-- `test_data/validation/` - Comparison tools
+- `test_data/meshes/` - 4 test meshes (cube, cylinder, sphere, torus)
 
 ---
 
@@ -280,7 +276,7 @@ part3_blender/
 ✅ Start with Part 1 - It's the foundation
 ✅ Use reference implementations - We provide examples for a reason
 ✅ Test incrementally - Don't wait until the end
-✅ Validate against references - Use comparison tools
+✅ Run the test suite frequently - Catch issues early
 ✅ Document as you go - Write ALGORITHM.md while coding
 ✅ Ask questions early - Better than wrong assumptions
 
@@ -290,7 +286,7 @@ part3_blender/
 
 ❌ Don't implement your own sparse matrix solver (use Eigen)
 ❌ Don't use import/export for Blender (extract data directly)
-❌ Don't skip validation (compare against reference outputs)
+❌ Don't skip testing (run test_unwrap frequently)
 ❌ Don't forget memory management (check with valgrind)
 ❌ Don't ignore edge cases (degenerate triangles, closed islands)
 

@@ -68,6 +68,8 @@ For each triangle, compute the Jacobian matrix J that maps from UV space to 3D s
 
 6. **Compute stretch for this triangle:**
    ```
+   # Note: SVD returns singular values in descending order (σ1 ≥ σ2)
+   # so this simplifies to σ1/σ2, but we use max() for safety
    stretch = max(σ1/σ2, σ2/σ1)
    ```
 
@@ -124,6 +126,7 @@ def compute_stretch(mesh, uvs):
             if sigma2 < 1e-10:
                 continue
 
+            # Compute stretch (SVD returns sorted singular values: sigma1 >= sigma2)
             stretch = max(sigma1 / sigma2, sigma2 / sigma1)
             max_stretch = max(max_stretch, stretch)
 
@@ -284,26 +287,55 @@ def compute_angle_distortion(mesh, uvs):
 
 def compute_triangle_angles_3d(p0, p1, p2):
     """Compute 3 angles of 3D triangle"""
-    e0 = p1 - p0
-    e1 = p2 - p1
-    e2 = p0 - p2
+    # Angle at p0: between edges p0->p1 and p0->p2
+    v01 = p1 - p0
+    v02 = p2 - p0
 
-    # Normalize
-    e0 = e0 / np.linalg.norm(e0)
-    e1 = e1 / np.linalg.norm(e1)
-    e2 = e2 / np.linalg.norm(e2)
+    # Angle at p1: between edges p1->p0 and p1->p2
+    v10 = p0 - p1
+    v12 = p2 - p1
 
-    # Angles
-    angle0 = np.arccos(np.clip(np.dot(-e2, e0), -1, 1))
-    angle1 = np.arccos(np.clip(np.dot(-e0, e1), -1, 1))
-    angle2 = np.arccos(np.clip(np.dot(-e1, e2), -1, 1))
+    # Angle at p2: between edges p2->p0 and p2->p1
+    v20 = p0 - p2
+    v21 = p1 - p2
+
+    # Helper function to compute angle between two vectors
+    def angle_between(v1, v2):
+        n1 = v1 / np.linalg.norm(v1)
+        n2 = v2 / np.linalg.norm(v2)
+        return np.arccos(np.clip(np.dot(n1, n2), -1, 1))
+
+    angle0 = angle_between(v01, v02)
+    angle1 = angle_between(v10, v12)
+    angle2 = angle_between(v20, v21)
 
     return [angle0, angle1, angle2]
 
 def compute_triangle_angles_2d(uv0, uv1, uv2):
-    """Same as 3D but in 2D"""
-    # Similar implementation
-    ...
+    """Compute 3 angles of 2D triangle (UV space)"""
+    # Angle at uv0: between edges uv0->uv1 and uv0->uv2
+    v01 = uv1 - uv0
+    v02 = uv2 - uv0
+
+    # Angle at uv1: between edges uv1->uv0 and uv1->uv2
+    v10 = uv0 - uv1
+    v12 = uv2 - uv1
+
+    # Angle at uv2: between edges uv2->uv0 and uv2->uv1
+    v20 = uv0 - uv2
+    v21 = uv1 - uv2
+
+    # Helper function to compute angle between two 2D vectors
+    def angle_between_2d(v1, v2):
+        n1 = v1 / np.linalg.norm(v1)
+        n2 = v2 / np.linalg.norm(v2)
+        return np.arccos(np.clip(np.dot(n1, n2), -1, 1))
+
+    angle0 = angle_between_2d(v01, v02)
+    angle1 = angle_between_2d(v10, v12)
+    angle2 = angle_between_2d(v20, v21)
+
+    return [angle0, angle1, angle2]
 ```
 
 ### Interpretation
