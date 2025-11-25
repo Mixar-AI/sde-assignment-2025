@@ -41,61 +41,100 @@ void pack_uv_islands(Mesh* mesh,
         return;
     }
 
-    printf("Packing %d islands...\n", result->num_islands);
-
-    // TODO: Implement island packing
-    //
-    // ALGORITHM:
-    //
-    // STEP 1: Compute bounding box for each island
-    //   - For each island, find min/max U and V
-    //   - Compute width and height
-    //   - Track which vertices belong to each island
-    //
-    // STEP 2: Sort islands by height (descending)
-    //   - Larger islands first
-    //   - Use std::sort with custom comparator
-    //
-    // STEP 3: Shelf packing
-    //   - Create shelves (horizontal rows)
-    //   - Try to fit island in current shelf
-    //   - If doesn't fit, create new shelf below
-    //   - Track target_x, target_y for each island
-    //
-    // STEP 4: Move islands to packed positions
-    //   - For each island:
-    //       offset_x = target_x - current_min_u
-    //       offset_y = target_y - current_min_v
-    //   - Apply offset to all UVs in island
-    //
-    // STEP 5: Scale everything to fit [0,1]²
-    //   - Find max_width, max_height of packed result
-    //   - Scale all UVs by 1.0 / max(max_width, max_height)
-    //
-    // EXPECTED COVERAGE:
-    //   - Shelf packing: > 60%
-    //
-    // BONUS (+10 points):
-    //   - Implement MaxRects or Skyline packing for > 75% coverage
-
     std::vector<Island> islands(result->num_islands);
 
-    // STEP 1: Compute bounding boxes
-    // YOUR CODE HERE
+    // Initialize islands
+    for (int i = 0; i < result->num_islands; i++) {
+        islands[i].id = i;
+        islands[i].min_u = FLT_MAX;
+        islands[i].max_u = -FLT_MAX;
+        islands[i].min_v = FLT_MAX;
+        islands[i].max_v = -FLT_MAX;
+    }
 
-    // STEP 2: Sort by height
-    // YOUR CODE HERE
+    // STEP 1: Compute bounding boxes for each island
+    // Build mapping from face to island, then find vertices per island
+    std::vector<int> vertex_island(mesh->num_vertices, -1);
+
+    for (int f = 0; f < mesh->num_triangles; f++) {
+        int island_id = result->face_island_ids[f];
+        if (island_id < 0 || island_id >= result->num_islands) continue;
+
+        for (int i = 0; i < 3; i++) {
+            int v = mesh->triangles[f * 3 + i];
+            if (vertex_island[v] == -1) {
+                vertex_island[v] = island_id;
+                islands[island_id].vertex_indices.push_back(v);
+
+                float u = mesh->uvs[v * 2];
+                float vi = mesh->uvs[v * 2 + 1];
+
+                islands[island_id].min_u = min_float(islands[island_id].min_u, u);
+                islands[island_id].max_u = max_float(islands[island_id].max_u, u);
+                islands[island_id].min_v = min_float(islands[island_id].min_v, vi);
+                islands[island_id].max_v = max_float(islands[island_id].max_v, vi);
+            }
+        }
+    }
+
+    // Compute widths and heights
+    for (int i = 0; i < result->num_islands; i++) {
+        islands[i].width = islands[i].max_u - islands[i].min_u + margin;
+        islands[i].height = islands[i].max_v - islands[i].min_v + margin;
+        if (islands[i].width < margin) islands[i].width = margin;
+        if (islands[i].height < margin) islands[i].height = margin;
+    }
+
+    // STEP 2: Sort islands by height (descending)
+    std::sort(islands.begin(), islands.end(),
+        [](const Island& a, const Island& b) {
+            return a.height > b.height;
+        });
 
     // STEP 3: Shelf packing
-    // YOUR CODE HERE
+    float shelf_x = 0.0f;
+    float shelf_y = 0.0f;
+    float shelf_height = islands[0].height;
+    float max_width = 0.0f;
 
-    // STEP 4: Move islands
-    // YOUR CODE HERE
+    for (size_t i = 0; i < islands.size(); i++) {
+        // Check if island fits in current shelf
+        if (shelf_x + islands[i].width > 1.0f && shelf_x > 0.0f) {
+            // Start new shelf
+            shelf_y += shelf_height;
+            shelf_height = islands[i].height;
+            shelf_x = 0.0f;
+        }
 
-    // STEP 5: Scale to [0,1]
-    // YOUR CODE HERE
+        // Place island
+        islands[i].target_x = shelf_x;
+        islands[i].target_y = shelf_y;
 
-    printf("  Packing completed\n");
+        shelf_x += islands[i].width;
+        max_width = max_float(max_width, shelf_x);
+    }
+
+    float total_height = shelf_y + shelf_height;
+
+    // STEP 4: Move islands to packed positions
+    for (size_t i = 0; i < islands.size(); i++) {
+        float offset_x = islands[i].target_x - islands[i].min_u;
+        float offset_y = islands[i].target_y - islands[i].min_v;
+
+        for (int v : islands[i].vertex_indices) {
+            mesh->uvs[v * 2] += offset_x;
+            mesh->uvs[v * 2 + 1] += offset_y;
+        }
+    }
+
+    // STEP 5: Scale to fit [0,1]²
+    float scale = 1.0f / max_float(max_width, total_height);
+    if (scale < 1.0f) {
+        for (int v = 0; v < mesh->num_vertices; v++) {
+            mesh->uvs[v * 2] *= scale;
+            mesh->uvs[v * 2 + 1] *= scale;
+        }
+    }
 }
 
 void compute_quality_metrics(const Mesh* mesh, UnwrapResult* result) {

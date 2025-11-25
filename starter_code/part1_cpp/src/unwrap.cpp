@@ -37,29 +37,66 @@ static int* extract_islands(const Mesh* mesh,
                            const int* seam_edges,
                            int num_seams,
                            int* num_islands_out) {
-    // TODO: Implement island extraction
-    //
-    // Algorithm:
-    // 1. Build face adjacency graph (faces connected by non-seam edges)
-    // 2. Run connected components (BFS or DFS)
-    // 3. Assign island ID to each face
-    //
-    // Steps:
-    // 1. Create std::set<int> of seam edge indices for fast lookup
-    // 2. Build adjacency list for faces (only through non-seam edges)
-    // 3. Run BFS/DFS to find connected components
-    // 4. Return array of island IDs (one per face)
+    int num_faces = mesh->num_triangles;
 
-    int* face_island_ids = (int*)malloc(mesh->num_triangles * sizeof(int));
+    int* face_island_ids = (int*)malloc(num_faces * sizeof(int));
 
     // Initialize all to -1 (unvisited)
-    for (int i = 0; i < mesh->num_triangles; i++) {
+    for (int i = 0; i < num_faces; i++) {
         face_island_ids[i] = -1;
     }
 
-    // YOUR CODE HERE
+    // Step 1: Create set of seam edge indices for fast lookup
+    std::set<int> seam_set;
+    for (int i = 0; i < num_seams; i++) {
+        seam_set.insert(seam_edges[i]);
+    }
 
-    *num_islands_out = 0;  // Update this with actual count
+    // Step 2: Build face adjacency list (only through non-seam edges)
+    std::vector<std::vector<int>> face_adjacency(num_faces);
+
+    for (int e = 0; e < topo->num_edges; e++) {
+        // Skip seam edges - they don't connect faces within an island
+        if (seam_set.find(e) != seam_set.end()) continue;
+
+        int f0 = topo->edge_faces[e * 2 + 0];
+        int f1 = topo->edge_faces[e * 2 + 1];
+
+        // Only interior edges connect two faces
+        if (f0 >= 0 && f1 >= 0) {
+            face_adjacency[f0].push_back(f1);
+            face_adjacency[f1].push_back(f0);
+        }
+    }
+
+    // Step 3: BFS to find connected components
+    int island_id = 0;
+    std::vector<int> queue;
+
+    for (int start_face = 0; start_face < num_faces; start_face++) {
+        if (face_island_ids[start_face] >= 0) continue; // Already visited
+
+        // BFS from this face
+        queue.clear();
+        queue.push_back(start_face);
+        face_island_ids[start_face] = island_id;
+
+        size_t front = 0;
+        while (front < queue.size()) {
+            int face = queue[front++];
+
+            for (int neighbor : face_adjacency[face]) {
+                if (face_island_ids[neighbor] < 0) {
+                    face_island_ids[neighbor] = island_id;
+                    queue.push_back(neighbor);
+                }
+            }
+        }
+
+        island_id++;
+    }
+
+    *num_islands_out = island_id;
 
     printf("Extracted %d UV islands\n", *num_islands_out);
 
@@ -74,16 +111,22 @@ static void copy_island_uvs(Mesh* result,
                            const int* face_indices,
                            int num_faces,
                            const std::map<int, int>& global_to_local) {
-    // TODO: Implement UV copying
-    //
-    // For each face in the island:
-    //   For each vertex in the face:
-    //     global_idx = vertex index in mesh
-    //     local_idx = global_to_local[global_idx]
-    //     result->uvs[global_idx * 2] = island_uvs[local_idx * 2]
-    //     result->uvs[global_idx * 2 + 1] = island_uvs[local_idx * 2 + 1]
+    // For each face in the island
+    for (int f = 0; f < num_faces; f++) {
+        int tri = face_indices[f];
 
-    // YOUR CODE HERE
+        // For each vertex in the face
+        for (int i = 0; i < 3; i++) {
+            int global_idx = result->triangles[tri * 3 + i];
+
+            auto it = global_to_local.find(global_idx);
+            if (it != global_to_local.end()) {
+                int local_idx = it->second;
+                result->uvs[global_idx * 2] = island_uvs[local_idx * 2];
+                result->uvs[global_idx * 2 + 1] = island_uvs[local_idx * 2 + 1];
+            }
+        }
+    }
 }
 
 Mesh* unwrap_mesh(const Mesh* mesh,
@@ -144,10 +187,37 @@ Mesh* unwrap_mesh(const Mesh* mesh,
             continue;
         }
 
-        // YOUR CODE HERE:
-        // - Call lscm_parameterize
-        // - Build global_to_local mapping
-        // - Copy UVs to result mesh
+        // Build global_to_local mapping for this island
+        std::map<int, int> global_to_local;
+        for (int f : island_faces) {
+            for (int i = 0; i < 3; i++) {
+                int gv = mesh->triangles[f * 3 + i];
+                if (global_to_local.find(gv) == global_to_local.end()) {
+                    int lv = (int)global_to_local.size();
+                    global_to_local[gv] = lv;
+                }
+            }
+        }
+
+        printf("  %d vertices in island\n", (int)global_to_local.size());
+
+        // Call LSCM parameterization
+        float* island_uvs = lscm_parameterize(mesh, island_faces.data(), (int)island_faces.size());
+
+        if (island_uvs) {
+            // Copy UVs to result mesh
+            copy_island_uvs(result, island_uvs, island_faces.data(), (int)island_faces.size(), global_to_local);
+            free(island_uvs);
+            printf("  LSCM succeeded\n");
+        } else {
+            printf("  LSCM failed, using planar projection\n");
+            // Fallback: simple planar projection (just use first two coordinates)
+            for (const auto& pair : global_to_local) {
+                int gv = pair.first;
+                result->uvs[gv * 2] = mesh->vertices[gv * 3 + 0];
+                result->uvs[gv * 2 + 1] = mesh->vertices[gv * 3 + 1];
+            }
+        }
     }
 
     // STEP 5: Pack islands if requested
