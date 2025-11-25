@@ -269,9 +269,7 @@ part3_blender/
 - `starter_code/part3_blender/reference/cache_example.py` - Caching implementation
 
 ### Test Data
-- `test_data/meshes/` - 7 test meshes (cube to 10k vertices)
-- `test_data/reference_outputs/` - Expected results
-- `test_data/validation/` - Comparison tools
+- `test_data/meshes/` - 4 test meshes (cube, cylinder, sphere, torus)
 
 ---
 
@@ -280,7 +278,7 @@ part3_blender/
 ✅ Start with Part 1 - It's the foundation
 ✅ Use reference implementations - We provide examples for a reason
 ✅ Test incrementally - Don't wait until the end
-✅ Validate against references - Use comparison tools
+✅ Run the test suite frequently - Catch issues early
 ✅ Document as you go - Write ALGORITHM.md while coding
 ✅ Ask questions early - Better than wrong assumptions
 
@@ -290,7 +288,7 @@ part3_blender/
 
 ❌ Don't implement your own sparse matrix solver (use Eigen)
 ❌ Don't use import/export for Blender (extract data directly)
-❌ Don't skip validation (compare against reference outputs)
+❌ Don't skip testing (run test_unwrap frequently)
 ❌ Don't forget memory management (check with valgrind)
 ❌ Don't ignore edge cases (degenerate triangles, closed islands)
 

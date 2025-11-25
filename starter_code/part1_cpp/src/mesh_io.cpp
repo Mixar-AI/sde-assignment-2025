@@ -46,13 +46,30 @@ Mesh* load_obj(const char* filename) {
             // Face
             int v0, v1, v2;
             int vt0, vt1, vt2;
+            int num_vertices = vertices.size() / 3;
 
             if (has_uvs && sscanf(line, "f %d/%d %d/%d %d/%d",
                                  &v0, &vt0, &v1, &vt1, &v2, &vt2) == 6) {
+                // Validate vertex indices (OBJ is 1-indexed)
+                if (v0 < 1 || v0 > num_vertices ||
+                    v1 < 1 || v1 > num_vertices ||
+                    v2 < 1 || v2 > num_vertices) {
+                    fprintf(stderr, "Error: Invalid vertex indices in face: %d %d %d (valid range: 1-%d)\n",
+                            v0, v1, v2, num_vertices);
+                    continue;  // Skip this face
+                }
                 triangles.push_back(v0 - 1);
                 triangles.push_back(v1 - 1);
                 triangles.push_back(v2 - 1);
             } else if (sscanf(line, "f %d %d %d", &v0, &v1, &v2) == 3) {
+                // Validate vertex indices (OBJ is 1-indexed)
+                if (v0 < 1 || v0 > num_vertices ||
+                    v1 < 1 || v1 > num_vertices ||
+                    v2 < 1 || v2 > num_vertices) {
+                    fprintf(stderr, "Error: Invalid vertex indices in face: %d %d %d (valid range: 1-%d)\n",
+                            v0, v1, v2, num_vertices);
+                    continue;  // Skip this face
+                }
                 triangles.push_back(v0 - 1);
                 triangles.push_back(v1 - 1);
                 triangles.push_back(v2 - 1);
@@ -77,9 +94,21 @@ Mesh* load_obj(const char* filename) {
     mesh->triangles = (int*)malloc(triangles.size() * sizeof(int));
     memcpy(mesh->triangles, triangles.data(), triangles.size() * sizeof(int));
 
-    if (has_uvs && uvs_temp.size() == vertices.size() / 3 * 2) {
-        mesh->uvs = (float*)malloc(uvs_temp.size() * sizeof(float));
-        memcpy(mesh->uvs, uvs_temp.data(), uvs_temp.size() * sizeof(float));
+    if (has_uvs) {
+        size_t expected_uv_count = (vertices.size() / 3) * 2;
+        if (uvs_temp.size() == expected_uv_count) {
+            mesh->uvs = (float*)malloc(uvs_temp.size() * sizeof(float));
+            memcpy(mesh->uvs, uvs_temp.data(), uvs_temp.size() * sizeof(float));
+        } else {
+            fprintf(stderr,
+                    "Warning: UV count mismatch in %s\n"
+                    "  Expected: %zu UVs (%zu vertices)\n"
+                    "  Found:    %zu UVs\n"
+                    "  UVs will be ignored.\n",
+                    filename, expected_uv_count / 2, vertices.size() / 3,
+                    uvs_temp.size() / 2);
+            mesh->uvs = NULL;
+        }
     } else {
         mesh->uvs = NULL;
     }

@@ -162,17 +162,19 @@ int main() {
 
     // Topology tests
     test_topology("01_cube.obj", 8, 18, 12);
-    test_topology("04_sphere.obj", 42, 120, 80);
+    test_topology("03_sphere.obj", 42, 120, 80);
 
     // Seam detection tests
-    test_seams("01_cube.obj", 5, 11);           // Expected: 7-9, allow ±2
-    test_seams("04_sphere.obj", 0, 5);          // Expected: 1-3, allow ±2
-    test_seams("03_cylinder.obj", 0, 3);        // Expected: 1-2, allow ±1
+    // Basic spanning tree should produce minimum seams
+    // Angular defect refinement may add 2-4 additional seams
+    test_seams("01_cube.obj", 7, 11);           // Basic: 7, refined: 7-11
+    test_seams("03_sphere.obj", 1, 5);          // Sphere needs more seams due to curvature
+    test_seams("02_cylinder.obj", 1, 3);        // Cylinder: 1-2 seams typically
 
     // Full unwrap tests
     test_unwrap("01_cube.obj", 2.0f);           // Allow up to 2.0 stretch
-    test_unwrap("04_sphere.obj", 2.0f);
-    test_unwrap("03_cylinder.obj", 1.5f);       // Cylinder should be better
+    test_unwrap("03_sphere.obj", 2.0f);
+    test_unwrap("02_cylinder.obj", 1.5f);       // Cylinder should be better
 
     printf("\n");
     printf("========================================\n");
