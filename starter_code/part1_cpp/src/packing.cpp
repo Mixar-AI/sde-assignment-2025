@@ -15,6 +15,7 @@
 #include "math_utils.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <float.h>
 #include <vector>
 #include <algorithm>
@@ -100,20 +101,43 @@ void pack_uv_islands(Mesh* mesh,
 void compute_quality_metrics(const Mesh* mesh, UnwrapResult* result) {
     if (!mesh || !result || !mesh->uvs) return;
 
-    // TODO: Implement quality metrics
+    // TODO: Implement quality metrics computation
     //
-    // Metrics to compute:
-    // - avg_stretch: Average stretch across all triangles
-    // - max_stretch: Maximum stretch
-    // - coverage: Percentage of [0,1]² covered by UVs
+    // NOTE: This function is OPTIONAL for Part 1.
+    // You will implement full metrics in Part 2 (Python).
+    // For Part 1, you can either:
+    //   (A) Leave these as defaults (tests will still pass)
+    //   (B) Implement basic estimation for testing
     //
-    // For now, placeholder values:
+    // ALGORITHM (see reference/algorithms.md and part2_python/reference/metrics_spec.md):
+    //
+    // STRETCH METRIC (SVD-based):
+    //   For each triangle:
+    //     1. Build Jacobian matrix J (3x2): maps UV space to 3D space
+    //        J = [dp/du, dp/dv] where p is 3D position
+    //     2. Compute J^T * J (2x2 Gramian matrix)
+    //     3. Find eigenvalues λ1, λ2 of J^T * J
+    //     4. Singular values: σ1 = sqrt(λ1), σ2 = sqrt(λ2)
+    //     5. Stretch = σ1 / σ2 (ratio of max/min stretching)
+    //   Average and max stretch across all triangles
+    //
+    // COVERAGE METRIC (Rasterization-based):
+    //   1. Create 1024x1024 bitmap of [0,1]² UV space
+    //   2. Rasterize all UV triangles
+    //   3. Coverage = (pixels_filled / total_pixels)
+    //   Alternative: Use bounding box as approximation
+    //
+    // EXPECTED RESULTS:
+    //   - Good unwrap: avg_stretch < 1.5, max_stretch < 2.0
+    //   - Shelf packing: coverage > 0.60 (60%)
+    //   - MaxRects packing: coverage > 0.75 (75%)
 
+    // Default values (replace with your implementation)
     result->avg_stretch = 1.0f;
     result->max_stretch = 1.0f;
     result->coverage = 0.7f;
 
-    printf("Quality metrics:\n");
+    printf("Quality metrics: (using defaults - implement for accurate values)\n");
     printf("  Avg stretch: %.2f\n", result->avg_stretch);
     printf("  Max stretch: %.2f\n", result->max_stretch);
     printf("  Coverage: %.1f%%\n", result->coverage * 100);

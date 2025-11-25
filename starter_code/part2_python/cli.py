@@ -120,6 +120,9 @@ Examples:
   # Unwrap single mesh
   python cli.py unwrap input.obj output.obj --angle-threshold 30
 
+  # Unwrap without packing
+  python cli.py unwrap input.obj output.obj --no-pack
+
   # Batch process
   python cli.py batch meshes/ output/ --threads 8
 
@@ -141,8 +144,9 @@ Examples:
                               help='Angle threshold in degrees (default: 30)')
     unwrap_parser.add_argument('--min-island', type=int, default=10,
                               help='Minimum island size in faces (default: 10)')
-    unwrap_parser.add_argument('--pack', action='store_true', default=True,
-                              help='Pack islands (default: True)')
+    unwrap_parser.add_argument('--no-pack', action='store_false', dest='pack',
+                              default=True,
+                              help='Disable island packing (default: enabled)')
     unwrap_parser.add_argument('--margin', type=float, default=0.02,
                               help='Island margin (default: 0.02)')
 

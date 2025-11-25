@@ -11,12 +11,11 @@ GETTING STARTED
    cd mixar_assignment_package
 
 2. READ THE ASSIGNMENT
-   - Open ASSIGNMENT.pdf for complete requirements
+   - Open ASSIGNMENT.md for complete requirements
    - This README provides setup instructions only
 
 3. VERIFY TEST DATA
-   - Check test_data/meshes/ contains 7 OBJ files
-   - Check test_data/reference_outputs/ for ground truth
+   - Check test_data/meshes/ contains 4 OBJ files (cube, cylinder, sphere, torus)
 
 4. BUILD PART 1 (C++)
    cd starter_code/part1_cpp
@@ -44,12 +43,10 @@ PACKAGE STRUCTURE
 
 mixar_assignment_package/
 ├── README.txt                     ← YOU ARE HERE
-├── ASSIGNMENT.pdf                 ← COMPLETE REQUIREMENTS
+├── ASSIGNMENT.md                  ← COMPLETE REQUIREMENTS
 │
-├── test_data/                     ← TEST MESHES & VALIDATION
-│   ├── meshes/                    (7 test OBJ files)
-│   ├── reference_outputs/         (Expected results)
-│   └── validation/                (Comparison tools)
+├── test_data/                     ← TEST MESHES
+│   └── meshes/                    (4 test OBJ files)
 │
 └── starter_code/                  ← YOUR IMPLEMENTATION GOES HERE
     ├── part1_cpp/                 (C++ unwrapping engine)
@@ -78,7 +75,7 @@ Files provided (DO NOT MODIFY):
 
 Reference materials:
   📚  reference/algorithms.md              - Algorithm descriptions
-  📚  reference/lscm_math.pdf              - Mathematical background
+  📚  reference/lscm_math.md               - Mathematical background
   📚  reference/lscm_matrix_example.cpp    - LSCM example
   📚  reference/topology_example.cpp       - Topology example
 
@@ -161,10 +158,36 @@ TESTING:
 - Part 3: Test in Blender after each feature
 
 VALIDATION:
-cd test_data/validation
-python compare_uvs.py \
-    ../../starter_code/part1_cpp/build/output/cube.obj \
-    ../reference_outputs/cube_lscm.obj
+Run the test suite to verify your implementation:
+cd starter_code/part1_cpp/build
+./test_unwrap
+
+MEMORY LEAK CHECKING:
+Check your implementation for memory leaks using valgrind:
+
+# Install valgrind (if not already installed)
+# Ubuntu/Debian:
+sudo apt-get install valgrind
+
+# macOS (Homebrew):
+brew install valgrind
+
+# Run tests with valgrind
+cd starter_code/part1_cpp/build
+valgrind --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         ./test_unwrap
+
+Expected output for correct implementation:
+  LEAK SUMMARY:
+    definitely lost: 0 bytes in 0 blocks
+    indirectly lost: 0 bytes in 0 blocks
+
+Common issues:
+  "still reachable: XXX bytes" - Usually OK (global allocations)
+  "definitely lost: XXX bytes" - Memory leak! Fix required.
+  "invalid read/write" - Buffer overflow! Check array bounds.
 
 ================================================================================
 SUBMISSION CHECKLIST
@@ -211,13 +234,13 @@ QUESTIONS:
 
 DEBUGGING:
 1. Check reference/ directories for examples
-2. Compare your output against reference_outputs/
-3. Use validation tools in test_data/validation/
-4. Check test output for specific failure messages
+2. Run test suite to see specific failure messages
+3. Check test output for detailed error information
+4. Use printf debugging in skeleton code
 
 COMMON ISSUES:
 - "CMake can't find Eigen" → Use bundled version in third_party/
-- "Tests segfault" → Check memory management, use valgrind
+- "Tests segfault" → Check memory management, see MEMORY LEAK CHECKING section
 - "LSCM doesn't converge" → Check boundary conditions, matrix assembly
 - "Blender can't import addon" → Check __init__.py has bl_info
 
@@ -227,15 +250,14 @@ RESOURCES
 
 ALGORITHMS:
 - starter_code/part1_cpp/reference/algorithms.md
-- starter_code/part1_cpp/reference/lscm_math.pdf
+- starter_code/part1_cpp/reference/lscm_math.md
 
 EXAMPLES:
 - All reference/ directories contain working examples
 - Study these before implementing
 
-VALIDATION:
-- test_data/reference_outputs/ - Expected results
-- test_data/validation/ - Comparison tools
+TEST DATA:
+- test_data/meshes/ - 4 test meshes for validation
 
 ================================================================================
 GOOD LUCK!

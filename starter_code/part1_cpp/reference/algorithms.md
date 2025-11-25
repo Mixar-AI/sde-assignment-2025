@@ -162,7 +162,10 @@ E = Σ (over triangles) ||∇u - R_90°(∇v)||²
 
 Where:
 - ∇u, ∇v are gradients of U and V in 3D space
-- R_90° is 90-degree rotation
+- R_90° is 90-degree counterclockwise rotation
+
+In component form (using Cauchy-Riemann equations):
+E = Σ Area(t) · [((∂u/∂x) - (∂v/∂y))² + ((∂u/∂y) + (∂v/∂x))²]
 ```
 
 ### Discrete Formulation
