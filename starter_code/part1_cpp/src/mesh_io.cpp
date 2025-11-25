@@ -43,36 +43,63 @@ Mesh* load_obj(const char* filename) {
                 has_uvs = true;
             }
         } else if (line[0] == 'f' && line[1] == ' ') {
-            // Face
-            int v0, v1, v2;
-            int vt0, vt1, vt2;
-            int num_vertices = vertices.size() / 3;
+            // Face - supports multiple formats:
+            // - Triangles: f v1 v2 v3
+            // - Triangles with UVs: f v1/vt1 v2/vt2 v3/vt3
+            // - Triangles with UVs and normals: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
+            // - Quads: f v1 v2 v3 v4 (converted to two triangles)
+            // - Quads with UVs/normals: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 v4/vt4/vn4
 
-            if (has_uvs && sscanf(line, "f %d/%d %d/%d %d/%d",
-                                 &v0, &vt0, &v1, &vt1, &v2, &vt2) == 6) {
+            int v[4], vt[4], vn[4];
+            int num_vertices = vertices.size() / 3;
+            int num_parsed = 0;
+
+            // Try v/vt/vn format (most common in Blender)
+            if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
+                      &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1],
+                      &v[2], &vt[2], &vn[2], &v[3], &vt[3], &vn[3]) == 12) {
+                num_parsed = 4;  // Quad with UVs and normals
+            } else if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d",
+                             &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1],
+                             &v[2], &vt[2], &vn[2]) == 9) {
+                num_parsed = 3;  // Triangle with UVs and normals
+            } else if (sscanf(line, "f %d/%d %d/%d %d/%d %d/%d",
+                             &v[0], &vt[0], &v[1], &vt[1], &v[2], &vt[2], &v[3], &vt[3]) == 8) {
+                num_parsed = 4;  // Quad with UVs
+            } else if (sscanf(line, "f %d/%d %d/%d %d/%d",
+                             &v[0], &vt[0], &v[1], &vt[1], &v[2], &vt[2]) == 6) {
+                num_parsed = 3;  // Triangle with UVs
+            } else if (sscanf(line, "f %d %d %d %d", &v[0], &v[1], &v[2], &v[3]) == 4) {
+                num_parsed = 4;  // Quad without UVs
+            } else if (sscanf(line, "f %d %d %d", &v[0], &v[1], &v[2]) == 3) {
+                num_parsed = 3;  // Triangle without UVs
+            }
+
+            if (num_parsed >= 3) {
                 // Validate vertex indices (OBJ is 1-indexed)
-                if (v0 < 1 || v0 > num_vertices ||
-                    v1 < 1 || v1 > num_vertices ||
-                    v2 < 1 || v2 > num_vertices) {
-                    fprintf(stderr, "Error: Invalid vertex indices in face: %d %d %d (valid range: 1-%d)\n",
-                            v0, v1, v2, num_vertices);
-                    continue;  // Skip this face
+                bool valid = true;
+                for (int i = 0; i < num_parsed; i++) {
+                    if (v[i] < 1 || v[i] > num_vertices) {
+                        fprintf(stderr, "Error: Invalid vertex index %d in face (valid range: 1-%d)\n",
+                               v[i], num_vertices);
+                        valid = false;
+                        break;
+                    }
                 }
-                triangles.push_back(v0 - 1);
-                triangles.push_back(v1 - 1);
-                triangles.push_back(v2 - 1);
-            } else if (sscanf(line, "f %d %d %d", &v0, &v1, &v2) == 3) {
-                // Validate vertex indices (OBJ is 1-indexed)
-                if (v0 < 1 || v0 > num_vertices ||
-                    v1 < 1 || v1 > num_vertices ||
-                    v2 < 1 || v2 > num_vertices) {
-                    fprintf(stderr, "Error: Invalid vertex indices in face: %d %d %d (valid range: 1-%d)\n",
-                            v0, v1, v2, num_vertices);
-                    continue;  // Skip this face
+
+                if (valid) {
+                    // Add first triangle (v0, v1, v2)
+                    triangles.push_back(v[0] - 1);
+                    triangles.push_back(v[1] - 1);
+                    triangles.push_back(v[2] - 1);
+
+                    // If quad, add second triangle (v0, v2, v3)
+                    if (num_parsed == 4) {
+                        triangles.push_back(v[0] - 1);
+                        triangles.push_back(v[2] - 1);
+                        triangles.push_back(v[3] - 1);
+                    }
                 }
-                triangles.push_back(v0 - 1);
-                triangles.push_back(v1 - 1);
-                triangles.push_back(v2 - 1);
             }
         }
     }
