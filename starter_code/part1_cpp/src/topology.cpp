@@ -9,8 +9,6 @@
  * 2. Ensure uniqueness (always store as v0 < v1)
  * 3. For each edge, find adjacent faces
  * 4. Validate using Euler characteristic
- *
- * See reference/topology_example.cpp for guidance
  */
 
 #include "topology.h"
@@ -74,7 +72,12 @@ TopologyInfo* build_topology(const Mesh* mesh) {
 
     TopologyInfo* topo = (TopologyInfo*)malloc(sizeof(TopologyInfo));
 
-    // YOUR CODE HERE
+    // Initialize to safe defaults (prevents crashes before implementation)
+    topo->edges = NULL;
+    topo->num_edges = 0;
+    topo->edge_faces = NULL;
+
+    // TODO: Your implementation here
 
     return topo;
 }

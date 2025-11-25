@@ -6,6 +6,7 @@ build/
 # Compiled binaries
 *.o
 *.so
+*.dylib
 *.a
 *.dll
 *.exe
@@ -17,8 +18,12 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+*.egg
 *.egg-info/
+dist/
 .pytest_cache/
+.coverage
+htmlcov/
 
 # IDE files
 .vscode/
@@ -44,3 +49,4 @@ Makefile
 # Test output
 output/
 *.log
+*.tmp
